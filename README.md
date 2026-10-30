@@ -9,7 +9,9 @@
 - 每个 DSH 会话自动创建一个飞书话题，后续回复持续在同一话题中；
 - 回复飞书话题中的任意消息，会继续对应的 DSH 会话；
 - 可以直接在飞书里用 `/dsh new --workspace <别名> <任务>` 在指定工作区新建 DSH 会话；
-- 不依赖 DSH 是否处于前台，也不调用模型发送通知。
+- 不依赖 DSH 是否处于前台，也不调用模型发送通知；
+- 发送失败自动重试，话题回复失败时退回到新消息，不会静默丢消息；
+- 重启后自动补发上次因退出而没送出的最终输出。
 
 > This README is written for AI agents. An agent should inspect the host profile first, preserve existing profile configuration, and restart DSH after changing Host plugin configuration.
 
@@ -164,6 +166,27 @@ To test routing:
 4. DSH should receive the reply as a user follow-up in the mapped session.
 
 An ordinary Feishu message that is not a reply to a saved DSH message is ignored by design, preventing cross-session actions.
+
+## Delivery guarantees
+
+The log file records every delivery decision, so a missing Feishu message can
+be diagnosed without the host console:
+
+```text
+sending session=... seq=... kind=completed chars=... chunks=... root=...
+sent session=... messages=1 root=...
+lark failed attempt=1/2 cmd=im +messages-reply err=...
+thread reply failed root=om_...; falling back to a new root: ...
+catch-up session=... chars=... root=...
+```
+
+- Every `lark-cli` send is attempted twice, 1.2 s apart.
+- A failing topic reply is retried once as a fresh standalone message, so a
+  deleted or inaccessible thread no longer swallows a finished turn.
+- Each session stores `lastSentHash` in the bindings file. On startup the
+  plugin compares it with the session's latest assistant text and re-sends the
+  difference — that recovers a turn whose `turn/end` never arrived because the
+  app was closing. The first run after installing only records the baseline.
 
 ## Feishu commands
 

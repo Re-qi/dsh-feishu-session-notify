@@ -1,9 +1,9 @@
 {
   "name": "dsh-feishu-session-notify",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "DSH ↔ 飞书双向桥接：Markdown 富文本、话题串联与按消息回复路由。",
+  "description": "DSH ↔ 飞书双向桥接：Markdown 富文本、话题串联、按消息回复路由与飞书新建会话。",
   "license": "MIT",
   "repository": "github:Re-qi/dsh-feishu-session-notify",
   "homepage": "https://github.com/Re-qi/dsh-feishu-session-notify",
