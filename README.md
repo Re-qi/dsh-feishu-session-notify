@@ -9,6 +9,7 @@
 - 每个 DSH 会话的**第一条**输出直接发到主聊天窗口，作为该会话的话题入口；
 - **后续**输出回复进由第一条消息创建的话题，点开那条消息就能看到全部历史；
 - 回复飞书话题中的任意消息，会继续对应的 DSH 会话；
+- DSH 的**审批请求**和 **`ask_user_question` 提问**也会推到飞书，可以直接在飞书里回复决定；
 - 可以直接在飞书里用 `/dsh new --workspace <别名> <任务>` 在指定工作区新建 DSH 会话；
 - 不依赖 DSH 是否处于前台，也不调用模型发送通知；
 - 发送失败自动重试，话题回复失败时退回到新消息，不会静默丢消息；
@@ -220,6 +221,71 @@ Creating a session:
 3. the confirmation message in Feishu becomes the topic root for that session,
    so every later output is replied into the same thread;
 4. the task text is delivered as the session's first user message.
+
+## Approvals and questions from Feishu
+
+DSH asks the human through two Cordis waterfalls. The plugin listens on both,
+`prepend: true`, and answers them from Feishu **without calling any model**:
+
+| Host hook | Feishu prompt | Reply resolves to |
+| --- | --- | --- |
+| `approval/request` | tool name + reason + `1 / 2` | `allowed-once` / `rejected` |
+| `user-questions/request` | the question and its options | `{ answers: [{ id, selected, custom? }] }` |
+
+Approval message:
+
+```text
+需要审批
+
+会话：帮我安装飞书 CLI
+工具：pwsh
+原因：git push origin main
+
+1 · 允许一次
+2 · 拒绝
+
+———
+回复「1」允许、「2」拒绝，或回复「取消」放弃
+```
+
+Question message (one message per question, numbered when a call asks several):
+
+```text
+需要你回答（1/3）
+
+项目用哪个端口？
+
+1 · 3000
+2 · 8080
+
+———
+回复选项编号（多选形如 1,3），或直接回复你的答案；回复「取消」跳过
+```
+
+How the user replies:
+
+| Reply | Approval | Question |
+| --- | --- | --- |
+| `1` / `同意` / `允许` / `y` | allow once | — |
+| `2` / `拒绝` / `n` | reject | — |
+| `1` / `2` / … | — | select that option |
+| `1,3` | — | select several (multi-select) |
+| any other text | not an answer — a hint is posted and the wait continues | used as the custom answer |
+| `取消` | reject | skip this question |
+
+Rules:
+
+- Every prompt ends with a fixed reply hint; there is **no extra timeout** — the
+  wait follows DSH's own limits, and a Feishu answer still applies afterwards.
+- The desktop card and Feishu **race**: whichever answers first wins, the other
+  wait is dropped.
+- A reply that targets the prompt message answers that prompt. When exactly one
+  prompt is open for a session, any reply in its topic also answers it.
+- Only the authorized user's replies count.
+- Answers are resolved by this plugin directly; the notify path never invokes a
+  model, so answering costs no tokens.
+- Delegated child agents (`agents.roots()` does not contain them) are never
+  surfaced: their approvals stay inside the parent's own UI.
 
 ## Topic vs flat mode
 
