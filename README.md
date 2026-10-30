@@ -13,6 +13,8 @@
 - 发送失败自动重试，话题回复失败时退回到新消息，不会静默丢消息；
 - 重启后自动补发上次因退出而没送出的最终输出。
 
+> 默认是**平铺模式**：每条回复都作为普通消息出现在主聊天窗口。话题模式会把后续回复折叠进话题，机器人单聊里主窗口只显示根消息，容易以为消息没到。要话题模式见 [Topic vs flat mode](#topic-vs-flat-mode)。
+
 > This README is written for AI agents. An agent should inspect the host profile first, preserve existing profile configuration, and restart DSH after changing Host plugin configuration.
 
 ## What the plugin does
@@ -218,12 +220,37 @@ Creating a session:
    so every later output is replied into the same thread;
 4. the task text is delivered as the session's first user message.
 
-## Topic behavior
+## Topic vs flat mode
+
+Feishu keeps a topic's replies inside the topic. In a bot p2p chat the main
+window then shows only the root message, so every later answer looks missing
+even though it was delivered. The plugin therefore defaults to **flat mode**:
+each turn is a normal message, visible in the main chat window.
+
+| Mode | Behaviour | Visible where |
+| --- | --- | --- |
+| `flat` (default) | every turn is a standalone `+messages-send` | main chat window |
+| `thread` | first turn is the root, later turns use `+messages-reply --reply-in-thread` | inside the topic only |
+
+Enable topic mode with either:
+
+```json
+// %USERPROFILE%\.dsh\feishu-session-notify.json
+{ "thread": true }
+```
+
+```powershell
+$env:DSH_FEISHU_THREAD = 1
+```
+
+The environment variable wins over the file. Both modes bind every sent
+message, so replying to any of them still routes back to the same DSH session.
+
+In thread mode:
 
 - The first completed output for a DSH session is sent as a Markdown root message.
 - Later outputs use `lark-cli im +messages-reply --reply-in-thread` against the saved root message ID.
 - If a human manually creates a topic by replying to an automatically sent message, the plugin adopts that topic's `root_id` and sends later output there.
-- Every sent root/reply message is recorded so replying to any of them resolves to the same DSH session.
 
 ## Message formatting
 
