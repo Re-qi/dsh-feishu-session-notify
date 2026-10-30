@@ -8,6 +8,7 @@
 - 使用飞书 Markdown 富文本；
 - 每个 DSH 会话自动创建一个飞书话题，后续回复持续在同一话题中；
 - 回复飞书话题中的任意消息，会继续对应的 DSH 会话；
+- 可以直接在飞书里用 `/dsh new --workspace <别名> <任务>` 在指定工作区新建 DSH 会话；
 - 不依赖 DSH 是否处于前台，也不调用模型发送通知。
 
 > This README is written for AI agents. An agent should inspect the host profile first, preserve existing profile configuration, and restart DSH after changing Host plugin configuration.
@@ -26,7 +27,8 @@ DSH turn/end(error|max-tokens|interrupted)
 
 Feishu im.message.receive_v1
   -> require sender_id == the authenticated user
-  -> require reply_to or root_id to match a saved message_id
+  -> `/dsh ...` command?  -> execute control command, reply a confirmation
+  -> else require reply_to or root_id to match a saved message_id
   -> normalize outer ```text fences
   -> agent.followup() to the mapped DSH session
 ```
@@ -163,6 +165,36 @@ To test routing:
 
 An ordinary Feishu message that is not a reply to a saved DSH message is ignored by design, preventing cross-session actions.
 
+## Feishu commands
+
+Any message from the authorized user whose text starts with `/dsh` is treated
+as a control command and is answered in Feishu instead of being forwarded to a
+DSH session. Commands do not need to be a reply to an existing topic.
+
+| Command | Effect |
+| --- | --- |
+| `/dsh workspaces` | List every DSH workspace with its alias and absolute path |
+| `/dsh new --workspace <alias> <task>` | Create a new DSH session in that workspace and send `<task>` to it |
+
+`/dsh new` accepts both `--workspace demo` and `--workspace=demo`. Anything
+else under `/dsh` returns the command help.
+
+The workspace alias is resolved against the live `workspaceRegistry`: the
+workspace id, its title/name, and the basename of its path all match
+case-insensitively. A message can therefore never name an arbitrary filesystem
+path — only a workspace DSH already knows about can be used.
+
+Creating a session:
+
+1. `agents.create` is called with the resolved `cwd`, the host's default
+   model/provider, and the default agent preset (each field is omitted, not
+   fatal, when the corresponding host service is unavailable);
+2. the session is attached to its workspace so it also appears in the DSH
+   sidebar;
+3. the confirmation message in Feishu becomes the topic root for that session,
+   so every later output is replied into the same thread;
+4. the task text is delivered as the session's first user message.
+
 ## Topic behavior
 
 - The first completed output for a DSH session is sent as a Markdown root message.
@@ -184,7 +216,8 @@ The AI output is forwarded as Markdown, so Feishu can render bold text, lists, i
 ## Security and safety
 
 - Incoming messages are accepted only from the open ID of the authenticated Feishu user.
-- A message must reply to a known DSH message; unthreaded messages are ignored.
+- A message must reply to a known DSH message, or be an explicit `/dsh` command; other unthreaded messages are ignored.
+- `/dsh new` only accepts a workspace alias resolved from `workspaceRegistry`, never a raw path.
 - Feishu replies can trigger DSH tools and file operations. Keep DSH's normal permission/approval policy enabled unless you explicitly understand the risk.
 - The binding file contains message IDs and local session IDs. Treat it as local state.
 - The plugin invokes the local `lark-cli`; it does not store the Feishu App Secret in source code.
