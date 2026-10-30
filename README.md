@@ -3,6 +3,7 @@
 让 DSH 和飞书双向协作：
 
 - DSH 每个完成的回复自动发送到飞书；
+- DSH 运行失败也自动发送错误通知到飞书，例如余额不足、限流、鉴权失败、达到最大 Token 限制；
 - 使用 DSH 当前会话名称作为标题；
 - 使用飞书 Markdown 富文本；
 - 每个 DSH 会话自动创建一个飞书话题，后续回复持续在同一话题中；
@@ -16,6 +17,10 @@
 ```text
 DSH assistant/message + turn/end(completed)
   -> lark-cli im +messages-send --markdown
+
+DSH turn/end(error|max-tokens|interrupted)
+  -> format failure reason/message
+  -> lark-cli im +messages-send or +messages-reply --markdown
   -> save Feishu message_id -> DSH session_id
   -> create/use one Feishu topic root per DSH session
 
