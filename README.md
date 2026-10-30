@@ -65,11 +65,11 @@ The commands below use the Windows DSH home path. On another platform replace `$
 ```powershell
 $DSH_HOME = Join-Path $env:USERPROFILE '.dsh'
 New-Item -ItemType Directory -Force (Join-Path $DSH_HOME 'plugins-src') | Out-Null
-git clone https://github.com/OWNER/dsh-feishu-session-notify.git `
+git clone https://github.com/Re-qi/dsh-feishu-session-notify.git `
   (Join-Path $DSH_HOME 'plugins-src/dsh-feishu-session-notify')
 ```
 
-Replace `OWNER` with the GitHub owner. If the repository already exists, use `git pull` instead.
+If the repository already exists, use `git pull` instead.
 
 ### 2. Add it to the active DSH profile
 
