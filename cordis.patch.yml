@@ -1,0 +1,4 @@
+# 只插入 host 插件；最终输出从本地 session/event 读取，不经过模型。
+- insert:
+    - id: feishu-session-notify
+      name: 'dsh-feishu-session-notify'

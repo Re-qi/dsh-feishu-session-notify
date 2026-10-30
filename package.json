@@ -1,0 +1,23 @@
+{
+  "name": "dsh-feishu-session-notify",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH ↔ 飞书双向桥接：Markdown 富文本、话题串联与按消息回复路由。",
+  "license": "MIT",
+  "repository": "github:Re-qi/dsh-feishu-session-notify",
+  "homepage": "https://github.com/Re-qi/dsh-feishu-session-notify",
+  "keywords": ["dsh", "deepseek-harness", "feishu", "lark", "lark-cli", "markdown", "agent"],
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": ["lib/index.js", "cordis.patch.yml", "README.md", "LICENSE"],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
