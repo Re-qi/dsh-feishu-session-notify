@@ -174,7 +174,7 @@ DSH session. Commands do not need to be a reply to an existing topic.
 | Command | Effect |
 | --- | --- |
 | `/dsh workspaces` | List every DSH workspace with its alias and absolute path |
-| `/dsh new --workspace <alias> <task>` | Create a new DSH session in that workspace and send `<task>` to it |
+| `/dsh new --workspace demo 修复登录测试` | Create a new DSH session in workspace `demo` and send it the remaining text as the task |
 
 `/dsh new` accepts both `--workspace demo` and `--workspace=demo`. Anything
 else under `/dsh` returns the command help.
