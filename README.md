@@ -6,14 +6,15 @@
 - DSH 运行失败也自动发送错误通知到飞书，例如余额不足、限流、鉴权失败、达到最大 Token 限制；
 - 使用 DSH 当前会话名称作为标题；
 - 使用飞书 Markdown 富文本；
-- 每个 DSH 会话自动创建一个飞书话题，后续回复持续在同一话题中；
+- 每个 DSH 会话的**第一条**输出直接发到主聊天窗口，作为该会话的话题入口；
+- **后续**输出回复进由第一条消息创建的话题，点开那条消息就能看到全部历史；
 - 回复飞书话题中的任意消息，会继续对应的 DSH 会话；
 - 可以直接在飞书里用 `/dsh new --workspace <别名> <任务>` 在指定工作区新建 DSH 会话；
 - 不依赖 DSH 是否处于前台，也不调用模型发送通知；
 - 发送失败自动重试，话题回复失败时退回到新消息，不会静默丢消息；
 - 重启后自动补发上次因退出而没送出的最终输出。
 
-> 默认是**平铺模式**：每条回复都作为普通消息出现在主聊天窗口。话题模式会把后续回复折叠进话题，机器人单聊里主窗口只显示根消息，容易以为消息没到。要话题模式见 [Topic vs flat mode](#topic-vs-flat-mode)。
+> 默认是**话题模式（混合）**：第一条进主窗口保证有入口，后续折叠进该话题。若某类聊天不需要话题，可切到平铺模式，见 [Topic vs flat mode](#topic-vs-flat-mode)。
 
 > This README is written for AI agents. An agent should inspect the host profile first, preserve existing profile configuration, and restart DSH after changing Host plugin configuration.
 
@@ -222,25 +223,29 @@ Creating a session:
 
 ## Topic vs flat mode
 
-Feishu keeps a topic's replies inside the topic. In a bot p2p chat the main
-window then shows only the root message, so every later answer looks missing
-even though it was delivered. The plugin therefore defaults to **flat mode**:
-each turn is a normal message, visible in the main chat window.
+Feishu keeps a topic's replies inside the topic, and a bot p2p chat lists only
+root messages in the main window. The default is therefore the **hybrid** that
+keeps an entry point visible:
+
+1. A session's first output is a normal `+messages-send` — it appears in the
+   main chat window and becomes the topic root.
+2. Every later output is `+messages-reply --reply-in-thread` on that root, so
+   the whole history lives under one message the user can click.
 
 | Mode | Behaviour | Visible where |
 | --- | --- | --- |
-| `flat` (default) | every turn is a standalone `+messages-send` | main chat window |
-| `thread` | first turn is the root, later turns use `+messages-reply --reply-in-thread` | inside the topic only |
+| `thread` (default) | first turn is the root, later turns reply into it | first turn in main window, the rest inside the topic |
+| `flat` | every turn is a standalone `+messages-send` | every turn in the main window, no topic |
 
-Enable topic mode with either:
+Switch to flat mode with either:
 
 ```json
 // %USERPROFILE%\.dsh\feishu-session-notify.json
-{ "thread": true }
+{ "thread": false }
 ```
 
 ```powershell
-$env:DSH_FEISHU_THREAD = 1
+$env:DSH_FEISHU_THREAD = 0
 ```
 
 The environment variable wins over the file. Both modes bind every sent
