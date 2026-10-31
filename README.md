@@ -288,6 +288,9 @@ Rules:
 - Only the authorized user's replies count.
 - Answers are resolved by this plugin directly; the notify path never invokes a
   model, so answering costs no tokens.
+- A plain Feishu message sent while the session is running is delivered with
+  `agent.steer()` — the same interjection as the desktop composer's "插话" —
+  instead of `agent.followup()`, which would only queue it behind the turn.
 - Delegated child agents (`agents.roots()` does not contain them) are never
   surfaced: their approvals stay inside the parent's own UI.
 
