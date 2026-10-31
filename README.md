@@ -278,7 +278,11 @@ Rules:
 - Every prompt ends with a fixed reply hint; there is **no extra timeout** — the
   wait follows DSH's own limits, and a Feishu answer still applies afterwards.
 - The desktop card and Feishu **race**: whichever answers first wins, the other
-  wait is dropped.
+  wait is dropped. Both surfaces show the same question by default, so it can be
+  read and answered in DSH as usual and from Feishu when away.
+- `{"feishuOnly": true}` (or `DSH_FEISHU_ASK_ONLY=1`) suppresses the desktop
+  answerer once the Feishu prompt is delivered — the desktop card then no longer
+  appears. Delivery failure always falls back to the desktop answerer.
 - A reply that targets the prompt message answers that prompt. When exactly one
   prompt is open for a session, any reply in its topic also answers it.
 - Only the authorized user's replies count.

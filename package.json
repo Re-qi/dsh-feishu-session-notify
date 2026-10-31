@@ -1,6 +1,6 @@
 {
   "name": "dsh-feishu-session-notify",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "type": "module",
   "description": "DSH ↔ 飞书双向桥接：默认平铺可见、可选话题、按消息回复路由与飞书新建会话。",
