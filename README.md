@@ -323,6 +323,18 @@ In thread mode:
 - Later outputs use `lark-cli im +messages-reply --reply-in-thread` against the saved root message ID.
 - If a human manually creates a topic by replying to an automatically sent message, the plugin adopts that topic's `root_id` and sends later output there.
 
+A topic root must be a **main-window message**. When the stored root is itself a
+thread reply, every later answer nests one level deeper and the chat window
+stays empty. The plugin therefore verifies roots:
+
+- `rootVerified` is set when the plugin posts the root itself;
+- an unverified root is checked once with `im +messages-mget` before use, and a
+  root living inside a topic is dropped so the next output re-anchors a visible
+  message;
+- the same check runs once at startup for every bound session, so older
+  bindings repair themselves;
+- the `/dsh new` confirmation is always posted as a root, never as a reply.
+
 ## Message formatting
 
 The plugin sends `--markdown`, not `--text`:
